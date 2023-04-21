@@ -1,0 +1,4 @@
+amplifi-v1-common/=lib/amplifi-v1-common/src/
+ds-test/=lib/forge-std/lib/ds-test/src/
+forge-std/=lib/forge-std/src/
+openzeppelin-contracts/=lib/amplifi-v1-common/lib/openzeppelin-contracts/
