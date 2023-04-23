@@ -36,14 +36,11 @@ contract PancakeOperator is IPancakeOperator, IWithdrawFungibleTokenCallback, IW
     }
 
     modifier requireAuthorizedMsgSender(uint256 positionId) {
-        // only position owner and authorized operator contract call will be allowed
+        // only position owner and approved operator contract call will be allowed
         address owner = BOOKKEEPER.ownerOf(positionId);
         address sender = msg.sender;
 
-        bool flag = sender == owner
-            || (REGISTRAR.isVerifiedActiveOperator(sender) && BOOKKEEPER.isApprovedForAll(owner, sender));
-
-        require(flag, "unauthorized message sender.");
+        require(sender == owner || BOOKKEEPER.isApprovedForAll(owner, sender), "unauthorized message sender.");
         _;
     }
 
