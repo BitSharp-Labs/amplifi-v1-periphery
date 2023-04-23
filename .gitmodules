@@ -4,3 +4,6 @@
 [submodule "lib/amplifi-v1-common"]
 	path = lib/amplifi-v1-common
 	url = https://github.com/BitSharp-Labs/amplifi-v1-common
+[submodule "lib/prb-math"]
+	path = lib/prb-math
+	url = https://github.com/PaulRBerg/prb-math
