@@ -50,7 +50,7 @@ contract Treasurer is ITreasurer {
         return priceBx96;
     }
 
-    function getAppraisalOfFungibleToken(address token, uint256 amount)
+    function getAppraisalOfFungible(address token, uint256 amount)
         external
         view
         returns (uint256 value, uint256 margin)
@@ -106,7 +106,7 @@ contract Treasurer is ITreasurer {
         }
     }
 
-    function getAppraisalOfFungibleTokens(address[] calldata tokens, uint256[] calldata amounts)
+    function getAppraisalOfFungibles(address[] calldata tokens, uint256[] calldata amounts)
         external
         view
         override
@@ -204,7 +204,7 @@ contract Treasurer is ITreasurer {
         return valueOfPancakeNFT(tokenId);
     }
 
-    function getAppraisalOfNonFungibleToken(address token, uint256 tokenId)
+    function getAppraisalsOfNonFungible(address token, uint256 tokenId)
         external
         view
         override
@@ -224,7 +224,7 @@ contract Treasurer is ITreasurer {
         }
     }
 
-    function getAppraisalOfNonFungibleTokens(address[] calldata tokens, uint256[] calldata tokenIds)
+    function getAppraisalOfNonFungibles(address[] calldata tokens, uint256[] calldata tokenIds)
         external
         view
         returns (uint256 value, uint256 margin)
