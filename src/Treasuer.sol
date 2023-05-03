@@ -10,15 +10,15 @@ import {TokenInfo, TokenType, TokenSubtype} from "amplifi-v1-common/models/Token
 import {FixedPoint96} from "./utils/FixedPoint96.sol";
 import {MathHelper} from "./utils/MathHelper.sol";
 import {TickMath} from "./utils/TickMath.sol";
-import {IPancakePool} from "./interfaces/pancake/IPancakePool.sol";
-import {INonfungiblePositionManager} from "./interfaces/pancake/INonfungiblePositionManager.sol";
-import {IPancakeFactory} from "./interfaces/pancake/IPancakeFactory.sol";
+import {IUniswapV3Pool} from "./interfaces/uniswap/IUniswapV3Pool.sol";
+import {INonfungiblePositionManager} from "./interfaces/uniswap/INonfungiblePositionManager.sol";
+import {IUniswapV3Factory} from "./interfaces/uniswap/IUniswapV3Factory.sol";
 
 contract Treasurer is ITreasurer {
     IRegistrar public immutable REGISTRAR;
 
     INonfungiblePositionManager public immutable NPM;
-    IPancakeFactory public immutable FACTORY;
+    IUniswapV3Factory public immutable FACTORY;
 
     address public PUD;
 
@@ -27,7 +27,7 @@ contract Treasurer is ITreasurer {
         REGISTRAR.setTreasurer(address(this));
 
         NPM = INonfungiblePositionManager(npm);
-        FACTORY = IPancakeFactory(NPM.factory());
+        FACTORY = IUniswapV3Factory(NPM.factory());
     }
 
     function initialize() external {
@@ -37,7 +37,7 @@ contract Treasurer is ITreasurer {
     function priceBx96FromSwapPool(address poolAddr, address token0) internal view returns (uint256) {
         if (poolAddr == address(0)) return FixedPoint96.Q96;
 
-        IPancakePool pool = IPancakePool(poolAddr);
+        IUniswapV3Pool pool = IUniswapV3Pool(poolAddr);
 
         (uint160 sqrtPriceX96,,,,,,) = pool.slot0();
 
@@ -147,7 +147,7 @@ contract Treasurer is ITreasurer {
         address pool = FACTORY.getPool(pos.token0, pos.token1, pos.fee);
         require(pool != address(0), "pool not found.");
 
-        (uint160 sqrtPriceBx96Curr,,,,,,) = IPancakePool(pool).slot0();
+        (uint160 sqrtPriceBx96Curr,,,,,,) = IUniswapV3Pool(pool).slot0();
         uint160 sqrtPriceBx96Lower = TickMath.getSqrtRatioAtTick(pos.tickLower);
         uint160 sqrtPriceBx96Upper = TickMath.getSqrtRatioAtTick(pos.tickUpper);
 

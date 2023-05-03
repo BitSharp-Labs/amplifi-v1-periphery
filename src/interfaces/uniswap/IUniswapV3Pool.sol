@@ -2,7 +2,7 @@
 pragma solidity >=0.5.0;
 pragma abicoder v2;
 
-interface IPancakePool {
+interface IUniswapV3Pool {
     function initialize(uint160 sqrtPriceX96) external;
 
     function observe(uint32[] calldata secondsAgos)
