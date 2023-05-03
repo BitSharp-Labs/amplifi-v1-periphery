@@ -13,35 +13,35 @@ contract Dispatcher is IDispatcher {
     address public immutable PUD;
 
     constructor(address registrar) {
-	REG = IRegistrar(registrar);
-	BK = IBookkeeper(REG.getBookkeeper());
-	PUD = REG.getPUD();
+        REG = IRegistrar(registrar);
+        BK = IBookkeeper(REG.getBookkeeper());
+        PUD = REG.getPUD();
     }
 
     function mintWithFungible(address token, uint256 amount) external returns (uint256 positionId) {
-	positionId = BK.mint(address(0), msg.sender);
-	this.depositFungible(positionId, token, amount);
+        positionId = BK.mint(address(0), msg.sender);
+        this.depositFungible(positionId, token, amount);
     }
 
     function depositFungible(uint256 positionId, address token, uint256 amount) external {
-	TransferHelper.safeTransferFrom(token, msg.sender, address(BK), amount);
-	BK.depositFungible(positionId, token);
+        TransferHelper.safeTransferFrom(token, msg.sender, address(BK), amount);
+        BK.depositFungible(positionId, token);
     }
 
     function repay(uint256 positionId, uint256 amount) external {
-	TransferHelper.safeTransferFrom(PUD, msg.sender, address(BK), amount);
-	BK.repay(positionId, amount);
+        TransferHelper.safeTransferFrom(PUD, msg.sender, address(BK), amount);
+        BK.repay(positionId, amount);
     }
 
     function repayAll(uint256 positionId) external {
-	uint256 debt = BK.getDebtOf(positionId);
-	uint256 pudExists = 0; // TODO get current PUD in position
+        uint256 debt = BK.getDebtOf(positionId);
+        uint256 pudExists = 0; // TODO get current PUD in position
 
-	if (debt > pudExists) {
-	    uint256 pudNeeded = debt - pudExists;
-	    this.depositFungible(positionId, PUD, pudNeeded);
-	}
+        if (debt > pudExists) {
+            uint256 pudNeeded = debt - pudExists;
+            this.depositFungible(positionId, PUD, pudNeeded);
+        }
 
-	BK.repay(positionId, debt);
+        BK.repay(positionId, debt);
     }
 }
