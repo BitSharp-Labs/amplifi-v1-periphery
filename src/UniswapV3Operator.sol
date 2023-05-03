@@ -13,7 +13,7 @@ import {ISwapRouter} from "./interfaces/uniswap/ISwapRouter.sol";
 import {CrossContractFunc} from "./CrossContractFunc.sol";
 import {TransferHelper} from "./utils/TransferHelper.sol";
 
-contract UniswapOperator is
+contract UniswapV3Operator is
     CrossContractFunc,
     IUniswapOperator,
     IWithdrawFungibleCallback,
