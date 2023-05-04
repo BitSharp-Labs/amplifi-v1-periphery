@@ -21,6 +21,15 @@ interface IPancakeOperator {
         external
         returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
 
+    struct CollectParams {
+        uint256 positionId;
+        uint256 tokenId;
+        uint128 amount0Max;
+        uint128 amount1Max;
+    }
+
+    function collect(CollectParams calldata params) external returns (uint256 amount0, uint256 amount1);
+
     struct ExactInputSingleParams {
         uint256 positionId;
         address tokenIn;

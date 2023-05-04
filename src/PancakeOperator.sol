@@ -104,6 +104,26 @@ contract PancakeOperator is
         return abi.encode(tokenId, liquidity, amount0, amount1);
     }
 
+    function collect(CollectParams calldata params)
+        external
+        override
+        requireAuthorizedMsgSender(params.positionId)
+        returns (uint256 amount0, uint256 amount1)
+    {
+        (,, address token0, address token1,,,,,,,,) = NPM.positions(params.positionId);
+        INonfungiblePositionManager.CollectParams memory params1 = INonfungiblePositionManager.CollectParams({
+            tokenId: params.tokenId,
+            recipient: address(BK),
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max
+        });
+
+        (amount0, amount1) = NPM.collect(params1);
+
+        if (amount0 > 0) BK.depositFungible(params.positionId, token0);
+        if (amount1 > 0) BK.depositFungible(params.positionId, token1);
+    }
+
     function exactInputSingle(ExactInputSingleParams calldata params)
         external
         override
