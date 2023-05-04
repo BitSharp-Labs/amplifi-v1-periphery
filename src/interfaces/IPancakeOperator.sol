@@ -2,34 +2,9 @@
 pragma solidity >0.7.0;
 pragma abicoder v2;
 
-interface IPancakeOperator {
-    struct MintParams {
-        uint256 positionId;
-        address token0;
-        address token1;
-        uint24 fee;
-        int24 tickLower;
-        int24 tickUpper;
-        uint256 amount0Desired;
-        uint256 amount1Desired;
-        uint256 amount0Min;
-        uint256 amount1Min;
-        uint256 deadline;
-    }
+import {INPMOperator} from "./INPMOperator.sol";
 
-    function mint(MintParams calldata params)
-        external
-        returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
-
-    struct CollectParams {
-        uint256 positionId;
-        uint256 tokenId;
-        uint128 amount0Max;
-        uint128 amount1Max;
-    }
-
-    function collect(CollectParams calldata params) external returns (uint256 amount0, uint256 amount1);
-
+interface IPancakeOperator is INPMOperator {
     struct ExactInputSingleParams {
         uint256 positionId;
         address tokenIn;

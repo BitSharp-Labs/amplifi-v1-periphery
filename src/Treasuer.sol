@@ -9,10 +9,10 @@ import {TokenInfo, TokenType, TokenSubtype} from "amplifi-v1-common/models/Token
 
 import {FixedPoint96} from "./utils/FixedPoint96.sol";
 import {MathHelper} from "./utils/MathHelper.sol";
-import {TickMath} from "./utils/TickMath.sol";
 import {IUniswapV3Pool} from "./interfaces/uniswap/IUniswapV3Pool.sol";
 import {INonfungiblePositionManager} from "./interfaces/uniswap/INonfungiblePositionManager.sol";
 import {IUniswapV3Factory} from "./interfaces/uniswap/IUniswapV3Factory.sol";
+import {INonfungibleInspector} from "./interfaces/INonfungibleInspector.sol";
 
 contract Treasurer is ITreasurer {
     IRegistrar public immutable REGISTRAR;
@@ -120,77 +120,6 @@ contract Treasurer is ITreasurer {
         }
     }
 
-    struct PancakePosition {
-        address token0;
-        address token1;
-        uint24 fee;
-        int24 tickLower;
-        int24 tickUpper;
-        uint128 liquidity;
-        uint128 tokensOwed0;
-        uint128 tokensOwed1;
-    }
-
-    function amountsOfPancakeNFT(PancakePosition memory pos)
-        internal
-        view
-        virtual
-        returns (uint256 amount0, uint256 amount1)
-    {
-        amount0 += uint256(pos.tokensOwed0);
-        amount1 += uint256(pos.tokensOwed1);
-
-        if (pos.liquidity == 0) {
-            return (amount0, amount1);
-        }
-
-        address pool = FACTORY.getPool(pos.token0, pos.token1, pos.fee);
-        require(pool != address(0), "pool not found.");
-
-        (uint160 sqrtPriceBx96Curr,,,,,,) = IUniswapV3Pool(pool).slot0();
-        uint160 sqrtPriceBx96Lower = TickMath.getSqrtRatioAtTick(pos.tickLower);
-        uint160 sqrtPriceBx96Upper = TickMath.getSqrtRatioAtTick(pos.tickUpper);
-
-        if (sqrtPriceBx96Curr >= sqrtPriceBx96Upper) {
-            // all asset converted to token1
-            amount1 += TickMath.getAmount1Delta(sqrtPriceBx96Upper, sqrtPriceBx96Lower, pos.liquidity);
-        } else if (sqrtPriceBx96Curr <= sqrtPriceBx96Lower) {
-            // all asset converted to token0
-            amount0 += TickMath.getAmount0Delta(sqrtPriceBx96Lower, sqrtPriceBx96Upper, pos.liquidity);
-        } else {
-            amount1 += TickMath.getAmount1Delta(sqrtPriceBx96Curr, sqrtPriceBx96Lower, pos.liquidity);
-            amount0 += TickMath.getAmount0Delta(sqrtPriceBx96Curr, sqrtPriceBx96Upper, pos.liquidity);
-        }
-    }
-
-    function valueOfPancakeNFT(uint256 tokenId) internal view virtual returns (TokenValue[] memory) {
-        PancakePosition memory pos;
-        (
-            ,
-            ,
-            pos.token0,
-            pos.token1,
-            pos.fee,
-            pos.tickLower,
-            pos.tickUpper,
-            pos.liquidity,
-            ,
-            ,
-            pos.tokensOwed0,
-            pos.tokensOwed1
-        ) = NPM.positions(tokenId);
-
-        address[] memory tokens = new address[](2);
-        uint256[] memory amounts = new uint[](2);
-
-        tokens[0] = pos.token0;
-        tokens[1] = pos.token1;
-
-        (amounts[0], amounts[1]) = amountsOfPancakeNFT(pos);
-
-        return appraiseFungibleTokens(tokens, amounts);
-    }
-
     function appraiseNonFungibleToken(address token, uint256 tokenId)
         internal
         view
@@ -200,8 +129,14 @@ contract Treasurer is ITreasurer {
         TokenInfo memory inf = REGISTRAR.getTokenInfoOf(token);
         require(inf.type_ == TokenType.NonFungible, "require non-fungible token");
 
-        // only support pancake like NFT now
-        return valueOfPancakeNFT(tokenId);
+        INonfungibleInspector inspector = INonfungibleInspector(inf.priceOracle);
+
+        address[] memory tokens;
+        uint256[] memory amounts;
+
+        (tokens, amounts) = inspector.inspectPosition(tokenId);
+
+        return appraiseFungibleTokens(tokens, amounts);
     }
 
     function getAppraisalsOfNonFungible(address token, uint256 tokenId)
