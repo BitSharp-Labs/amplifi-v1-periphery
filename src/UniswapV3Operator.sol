@@ -12,58 +12,58 @@ contract UniswapV3Operator is NPMOperator, IUniswapOperator {
     ISwapRouter private _swapRouter;
 
     constructor(address bookkeeper, address npm, address swapRouter) NPMOperator(npm, bookkeeper) {
-	_swapRouter = ISwapRouter(swapRouter);
+        _swapRouter = ISwapRouter(swapRouter);
     }
 
     function exactInputSingle(ExactInputSingleParams calldata params)
-	external
-	override
-	requireAuthorizedMsgSender(params.positionId)
-	runFunc(Function.ExactInputSingle)
-	returns (uint256 amountOut)
+        external
+        override
+        requireAuthorizedMsgSender(params.positionId)
+        runFunc(Function.ExactInputSingle)
+        returns (uint256 amountOut)
     {
-	bytes memory result = _bookkeeper.withdrawFungible(
-	    params.positionId, params.tokenIn, params.amountIn, address(this), abi.encode(params)
-	);
+        bytes memory result = _bookkeeper.withdrawFungible(
+            params.positionId, params.tokenIn, params.amountIn, address(this), abi.encode(params)
+        );
 
-	(amountOut) = abi.decode(result, (uint256));
+        (amountOut) = abi.decode(result, (uint256));
     }
 
     function execExactInputSingle(ExactInputSingleParams memory params) internal virtual returns (bytes memory) {
-	TransferHelper.safeApprove(params.tokenIn, address(_swapRouter), params.amountIn);
+        TransferHelper.safeApprove(params.tokenIn, address(_swapRouter), params.amountIn);
 
-	ISwapRouter.ExactInputSingleParams memory params1 = ISwapRouter.ExactInputSingleParams({
-	    tokenIn: params.tokenIn,
-	    tokenOut: params.tokenOut,
-	    fee: params.fee,
-	    recipient: address(_bookkeeper),
-	    deadline: params.deadline,
-	    amountIn: params.amountIn,
-	    amountOutMinimum: params.amountOutMinimum,
-	    sqrtPriceLimitX96: params.sqrtPriceLimitX96
-	});
+        ISwapRouter.ExactInputSingleParams memory params1 = ISwapRouter.ExactInputSingleParams({
+            tokenIn: params.tokenIn,
+            tokenOut: params.tokenOut,
+            fee: params.fee,
+            recipient: address(_bookkeeper),
+            deadline: params.deadline,
+            amountIn: params.amountIn,
+            amountOutMinimum: params.amountOutMinimum,
+            sqrtPriceLimitX96: params.sqrtPriceLimitX96
+        });
 
-	uint256 amountOut = _swapRouter.exactInputSingle(params1);
-	_bookkeeper.depositFungible(params.positionId, params.tokenOut);
+        uint256 amountOut = _swapRouter.exactInputSingle(params1);
+        _bookkeeper.depositFungible(params.positionId, params.tokenOut);
 
-	return abi.encode(amountOut);
+        return abi.encode(amountOut);
     }
 
     function withdrawFungibleCallback(
-	uint256, /* positionId */
-	address, /* token */
-	uint256, /* amount */
-	address, /* recipient */
-	bytes calldata data
+        uint256, /* positionId */
+        address, /* token */
+        uint256, /* amount */
+        address, /* recipient */
+        bytes calldata data
     ) external override requireBookkeeper returns (bytes memory result) {
-	Function func = runningFunc();
+        Function func = runningFunc();
 
-	if (func == Function.ExactInputSingle) {
-	    ExactInputSingleParams memory params;
-	    (params) = abi.decode(data, (ExactInputSingleParams));
-	    return execExactInputSingle(params);
-	} else {
-	    revert("unreachable code.");
-	}
+        if (func == Function.ExactInputSingle) {
+            ExactInputSingleParams memory params;
+            (params) = abi.decode(data, (ExactInputSingleParams));
+            return execExactInputSingle(params);
+        } else {
+            revert("unreachable code.");
+        }
     }
 }
