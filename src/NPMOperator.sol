@@ -72,20 +72,7 @@ contract NPMOperator is
         returns (address[] memory tokens, uint256[] memory amounts)
     {
         Position memory pos;
-        (
-            ,
-            ,
-            pos.token0,
-            pos.token1,
-            pos.fee,
-            pos.tickLower,
-            pos.tickUpper,
-            pos.liquidity,
-            ,
-            ,
-            pos.tokensOwed0,
-            pos.tokensOwed1
-        ) = _npm.positions(tokenId);
+        (,, pos.token0, pos.token1,,,, pos.liquidity,,, pos.tokensOwed0, pos.tokensOwed1) = _npm.positions(tokenId);
 
         tokens = new address[](2);
         amounts = new uint[](2);
@@ -97,6 +84,9 @@ contract NPMOperator is
         amounts[1] = pos.tokensOwed1;
 
         if (pos.liquidity != 0) {
+            (,,,, pos.fee, pos.tickLower, pos.tickUpper,, pos.feeGrowthInside0LastX128, pos.feeGrowthInside1LastX128,,)
+            = _npm.positions(tokenId);
+
             address pool = _factory.getPool(tokens[0], tokens[1], pos.fee);
             require(pool != address(0), "pool not found.");
 
@@ -108,16 +98,16 @@ contract NPMOperator is
             // as get pos.feeGrowthInside0LastX128 and pos.feeGrowthInside1LastX128 would
             // cause compile error: stack too deep.
             // turn on in production environment with --via-ir compile
-            /* (amount0, amount1) = uncollectedFee( */
-            /*     pool, */
-            /*     pos.liquidity, */
-            /*     pos.tickLower, */
-            /*     pos.tickUpper, */
-            /*     pos.feeGrowthInside0LastX128, */
-            /*     pos.feeGrowthInside1LastX128 */
-            /* ); */
-            /* amounts[0] += amount0; */
-            /* amounts[1] += amount1; */
+            (amount0, amount1) = uncollectedFee(
+                pool,
+                pos.liquidity,
+                pos.tickLower,
+                pos.tickUpper,
+                pos.feeGrowthInside0LastX128,
+                pos.feeGrowthInside1LastX128
+            );
+            amounts[0] += amount0;
+            amounts[1] += amount1;
         }
     }
 
